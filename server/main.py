@@ -1,10 +1,22 @@
 import os
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.router import api_router
 from detection_module.analyzer import monitor_traffic
 from error_masking import mask_server_header_middleware, register_error_masking
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+STATIC_DIR = FRONTEND_DIR / "static"
+INDEX_HTML = FRONTEND_DIR / "templates" / "index.html"
+
+if not STATIC_DIR.is_dir():
+    raise RuntimeError(f"Frontend static directory not found: {STATIC_DIR}")
+if not INDEX_HTML.is_file():
+    raise RuntimeError(f"Dashboard index not found: {INDEX_HTML}")
 
 _enable_docs = os.getenv("ENABLE_DOCS", "").lower() in ("1", "true", "yes")
 
@@ -20,6 +32,13 @@ register_error_masking(app)
 app.middleware("http")(mask_server_header_middleware)
 
 app.include_router(api_router)
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/")
+async def dashboard() -> FileResponse:
+    return FileResponse(INDEX_HTML, media_type="text/html")
 
 
 @app.get("/{full_path:path}")

@@ -1,0 +1,302 @@
+:root {
+    --bg-admin: #0a0f1d;
+    --bg-admin-card: #131a30;
+    --border-admin: #1f294d;
+    --neon-green: #00ffcc;
+    --neon-red: #ff3366;
+    --text-light: #e2e8f0;
+    
+    /* Home Assistant Palette */
+    --ha-bg: #101e2c;
+    --ha-card: #1c2a38;
+    --ha-blue: #03a9f4;
+    --ha-switch-on: #fdd835;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #020617;
+    color: var(--text-light);
+    overflow: hidden;
+    height: 100vh;
+}
+
+.dashboard-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* --- ЛЕВАЯ ПАНЕЛЬ (АДМИНКА) --- */
+.admin-panel {
+    width: 66.66%;
+    height: 100vh; /* Жестко фиксируем высоту по размеру окна */
+    background-color: var(--bg-admin);
+    border-right: 2px solid var(--border-admin);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow: hidden; /* Запрещаем любой скролл */
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-admin);
+    padding-bottom: 10px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.logo i { font-size: 28px; color: var(--neon-green); }
+.logo h1 { font-size: 20px; letter-spacing: 1px; }
+.logo span { font-size: 12px; color: #64748b; }
+
+.global-stats { display: flex; gap: 15px; }
+.stat-box {
+    background: var(--bg-admin-card);
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border-admin);
+    font-size: 14px;
+}
+.status-secure { color: var(--neon-green); font-weight: bold; text-shadow: 0 0 8px rgba(0,255,204,0.3); }
+.status-bad { color: var(--neon-red); font-weight: bold; }
+
+.panel-title {
+    font-size: 13px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.network-graph-wrapper {
+    flex: 1 1 0;
+    min-height: 0; 
+    background: var(--bg-admin-card);
+    border: 1px solid var(--border-admin);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#network-graph {
+    flex: 1; 
+    width: 100%;
+    min-height: 0;
+    outline: none;
+}
+
+.admin-footer-grid {
+    display: flex;
+    gap: 15px;
+    height: 220px;
+    flex-shrink: 0;
+}
+
+.terminal-wrapper { width: 65%; }
+.terminal {
+    background: #05070f;
+    border: 1px solid var(--border-admin);
+    border-radius: 6px;
+    height: calc(100% - 25px);
+    padding: 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    overflow-y: auto;
+    color: #a7f3d0;
+}
+.log-line { margin-bottom: 5px; }
+.text-muted { color: #64748b !important; }
+
+.reauth-wrapper { width: 35%; }
+.reauth-container {
+    background: var(--bg-admin-card);
+    border: 1px solid var(--border-admin);
+    border-radius: 6px;
+    height: calc(100% - 25px);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+.reauth-container p { font-size: 12px; color: #94a3b8; }
+
+.knock-slots { display: flex; gap: 15px; }
+.slot {
+    width: 35px;
+    height: 35px;
+    border: 2px dashed var(--border-admin);
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+.slot.active {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 204, 0.1);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+}
+
+/* --- ПРАВАЯ ПАНЕЛЬ (ТЕЛЕФОН) --- */
+.phone-panel {
+    width: 33.33%;
+    height: 100%;
+    background-color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.phone-frame {
+    width: 340px;
+    height: 680px;
+    background: #000;
+    border: 12px solid #334155;
+    border-radius: 40px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+.phone-header {
+    height: 30px;
+    background: #000;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    font-size: 12px;
+}
+.phone-speaker {
+    width: 60px;
+    height: 4px;
+    background: #334155;
+    border-radius: 2px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 6px;
+}
+.phone-icons { display: flex; gap: 5px; }
+
+/* Экран Home Assistant */
+.ha-screen {
+    flex-grow: 1;
+    background-color: var(--ha-bg);
+    display: flex;
+    flex-direction: column;
+}
+
+.ha-navbar {
+    height: 50px;
+    background-color: var(--ha-card);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    border-bottom: 1px solid #2c3e50;
+}
+.ha-navbar h2 { font-size: 16px; font-weight: 500; }
+
+.ha-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+.ha-card {
+    background: var(--ha-card);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.ha-card-header {
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.ha-card-header i { font-size: 16px; }
+.ha-icon-blue { color: var(--ha-blue); }
+.ha-icon-red { color: #ff5252; }
+.ha-icon-green { color: #4caf50; }
+
+.ha-device-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ha-device-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.ha-device-info i {
+    font-size: 24px;
+    color: #94a3b8;
+    transition: color 0.3s;
+}
+.ha-device-info i.active {
+    color: var(--ha-switch-on);
+    filter: drop-shadow(0 0 8px rgba(253,216,53,0.6));
+}
+
+.device-name { font-size: 14px; font-weight: 500; }
+.device-status { font-size: 12px; color: #64748b; }
+
+.ha-sensor-grid {
+    display: flex;
+    justify-content: space-around;
+    padding: 5px 0;
+}
+.ha-sensor-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.sensor-val { font-size: 18px; font-weight: bold; color: #fff; }
+.sensor-lbl { font-size: 11px; color: #64748b; }
+
+/* Тумблер переключателя */
+.switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #475569; transition: .3s;
+}
+.slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
+    background-color: white; transition: .3s;
+}
+input:checked + .slider { background-color: var(--ha-blue); }
+input:checked + .slider:before { transform: translateX(20px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+.btn-action { font-size: 20px; cursor: pointer; }
