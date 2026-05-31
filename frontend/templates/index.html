@@ -26,6 +26,21 @@
 
             <div class="network-graph-wrapper">
                 <div class="panel-title"><i class="mdi mdi-hub"></i> Топология сети и распределение трафика</div>
+
+                <div class="floating-panel panel-real">
+                    <div class="panel-header text-green"><i class="mdi mdi-shield-check"></i> Легитимные сессии (Real)</div>
+                    <ul id="real-ip-list" class="ip-list">
+                        <li class="text-muted">Пусто</li>
+                    </ul>
+                </div>
+
+                <div class="floating-panel panel-shadow">
+                    <div class="panel-header text-red"><i class="mdi mdi-skull-outline"></i> Изолированные (Shadow)</div>
+                    <ul id="shadow-ip-list" class="ip-list">
+                        <li class="text-muted">Пусто</li>
+                    </ul>
+                </div>
+                
                 <div id="network-graph"></div>
             </div>
 
@@ -40,13 +55,13 @@
                 <div class="reauth-wrapper">
                     <div class="panel-title"><i class="mdi mdi-key-wireless"></i> Implicit Re-auth Tracker</div>
                     <div class="reauth-container">
-                        <p>Паттерн: 3 клика лампы за 3 сек.</p>
+                        <p>Паттерн (15 с): Свет ON → Замок → Свет OFF (living)</p>
                         <div class="knock-slots">
-                            <div class="slot" id="slot-1"></div>
-                            <div class="slot" id="slot-2"></div>
-                            <div class="slot" id="slot-3"></div>
+                            <div class="slot" id="slot-1" title="1: Бра ON"></div>
+                            <div class="slot" id="slot-2" title="2: Замок"></div>
+                            <div class="slot" id="slot-3" title="3: Бра OFF"></div>
                         </div>
-                        <div class="reauth-status text-muted" id="reauth-msg">Ожидание триггера...</div>
+                        <div class="reauth-status text-muted" id="reauth-msg">Ожидание последовательности...</div>
                     </div>
                 </div>
             </div>
@@ -62,70 +77,34 @@
                         <i class="mdi mdi-battery"></i>
                     </div>
                 </div>
+
+                <div class="ha-login-screen" id="ha-login">
+                    <div class="ha-login-inner">
+                        <i class="mdi mdi-home-assistant ha-login-logo" aria-hidden="true"></i>
+                        <h3 class="ha-login-title">Home Assistant</h3>
+                        <div class="login-form-container ha-login-form" id="ha-login-form">
+                            <label class="ha-login-field">
+                                <span>Имя пользователя</span>
+                                <input type="text" id="ha-login-username" autocomplete="off" value="admin">
+                            </label>
+                            <label class="ha-login-field">
+                                <span>Пароль</span>
+                                <input type="text" id="ha-login-password" class="ha-login-password-mask" autocomplete="off">
+                            </label>
+                            <p class="ha-login-error" id="ha-login-error" hidden>Неверный логин или пароль</p>
+                            <button type="button" class="ha-login-btn" id="ha-login-submit">Login</button>
+                        </div>
+                    </div>
+                </div>
                 
-                <div class="ha-screen">
+                <div class="ha-screen ha-screen--hidden" id="ha-screen">
                     <header class="ha-navbar">
                         <i class="mdi mdi-menu"></i>
                         <h2>Наш Дом</h2>
                         <i class="mdi mdi-dots-vertical"></i>
                     </header>
                     
-                    <div class="ha-content">
-                        <div class="ha-card">
-                            <div class="ha-card-header">
-                                <i class="mdi mdi-lightbulb-group ha-icon-blue"></i>
-                                <span>Освещение</span>
-                            </div>
-                            <div class="ha-device-row">
-                                <div class="ha-device-info">
-                                    <i class="mdi mdi-lightbulb" id="lamp-icon"></i>
-                                    <div>
-                                        <div class="device-name">Гостиная Бра</div>
-                                        <div class="device-status" id="lamp-status">Выключено</div>
-                                    </div>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" id="lamp-toggle">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="ha-card">
-                            <div class="ha-card-header">
-                                <i class="mdi mdi-shield-home ha-icon-red"></i>
-                                <span>Безопасность</span>
-                            </div>
-                            <div class="ha-device-row">
-                                <div class="ha-device-info">
-                                    <i class="mdi mdi-lock" id="lock-icon"></i>
-                                    <div>
-                                        <div class="device-name">Входная дверь</div>
-                                        <div class="device-status">Заблокировано</div>
-                                    </div>
-                                </div>
-                                <i class="mdi mdi-lock-open-variant text-muted btn-action"></i>
-                            </div>
-                        </div>
-
-                        <div class="ha-card">
-                            <div class="ha-card-header">
-                                <i class="mdi mdi-thermometer ha-icon-green"></i>
-                                <span>Климат</span>
-                            </div>
-                            <div class="ha-sensor-grid">
-                                <div class="ha-sensor-item">
-                                    <span class="sensor-val">22.5 °C</span>
-                                    <span class="sensor-lbl">Температура</span>
-                                </div>
-                                <div class="ha-sensor-item">
-                                    <span class="sensor-val">48 %</span>
-                                    <span class="sensor-lbl">Влажность</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
+                    <div class="ha-content" id="ha-dynamic-content"></div>
                 </div>
             </div>
         </aside>

@@ -30,6 +30,10 @@ REAL_DEVICES: dict = {
 # Shadow-only room id; mobile app probes this to detect sandbox (not in REAL_DEVICES).
 CANARY_LIGHT_ROOM_ID = "hall_dimmer_aux"
 
+# Plausible legacy builds for shadow plane (no "vulnerable" suffix in API).
+SHADOW_LIGHT_FIRMWARE = "1.49.195007"
+SHADOW_LIGHT_VENDOR = "Signify"
+
 
 class ShadowWorld:
     def __init__(self) -> None:
@@ -41,14 +45,14 @@ class ShadowWorld:
         self.vulnerable_shadow_devices["lights"][CANARY_LIGHT_ROOM_ID] = {
             "status": "off",
             "brightness": 0,
-            "firmware": "v1.4.2-vulnerable",
-            "vendor": "Philips Hue-Fake",
+            "firmware": SHADOW_LIGHT_FIRMWARE,
+            "vendor": SHADOW_LIGHT_VENDOR,
         }
 
     def _apply_deception_lens(self) -> None:
         for light in self.vulnerable_shadow_devices["lights"].values():
-            light["firmware"] = "v1.4.2-vulnerable"
-            light["vendor"] = "Philips Hue-Fake"
+            light["firmware"] = SHADOW_LIGHT_FIRMWARE
+            light["vendor"] = SHADOW_LIGHT_VENDOR
 
     def get_shadow_light(self, room_id: str) -> dict | None:
         light = self.vulnerable_shadow_devices["lights"].get(room_id)
@@ -75,6 +79,13 @@ class ShadowWorld:
         if lock is None:
             return False
         lock["status"] = "unlocked"
+        return True
+
+    def lock_shadow_lock(self, door_id: str) -> bool:
+        lock = self.vulnerable_shadow_devices["locks"].get(door_id)
+        if lock is None:
+            return False
+        lock["status"] = "locked"
         return True
 
     def get_all_shadow_devices(self) -> list[dict]:
@@ -116,4 +127,12 @@ def unlock_real_lock(door_id: str) -> bool:
     if lock is None:
         return False
     lock["status"] = "unlocked"
+    return True
+
+
+def lock_real_lock(door_id: str) -> bool:
+    lock = REAL_DEVICES["locks"].get(door_id)
+    if lock is None:
+        return False
+    lock["status"] = "locked"
     return True

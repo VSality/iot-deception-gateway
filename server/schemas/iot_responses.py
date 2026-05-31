@@ -33,3 +33,7 @@ def build_toggle_response(new_state: str) -> dict:
 
 def build_unlock_response() -> dict:
     return {"result": "success", "message": "Door unlocked successfully"}
+
+
+def build_lock_response() -> dict:
+    return {"result": "success", "message": "Door locked successfully"}

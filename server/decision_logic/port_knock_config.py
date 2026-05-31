@@ -1,4 +1,4 @@
-# IoT Port Knocking (in-band sandbox exit) — tune for official smart-home app UX
-KNOCK_WINDOW_SECONDS = 3.0
-KNOCK_REQUIRED_TOGGLES = 3
-PORT_KNOCK_ROOM_ID = "living"
+# IoT Port Knocking (in-band sandbox exit) — device sequence FSM
+KNOCK_WINDOW_SECONDS = 15.0
+KNOCK_LIGHT_ROOM_ID = "living"
+KNOCK_LOCK_DOOR_ID = "main_door"

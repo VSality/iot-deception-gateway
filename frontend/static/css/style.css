@@ -123,7 +123,43 @@ body {
     color: #a7f3d0;
 }
 .log-line { margin-bottom: 5px; }
+.log-line--info { color: #a7f3d0; }
+.log-line--warning { color: #fbbf24; }
+.log-line--alert { color: #ff3366; }
+.log-line--reauth {
+    color: #00ffcc;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+}
 .text-muted { color: #64748b !important; }
+
+@keyframes unlockPunch {
+    0% {
+        transform: scale(1);
+        background: transparent;
+        color: inherit;
+        box-shadow: none;
+    }
+    20% {
+        transform: scale(1.15);
+        background: #00ffcc;
+        color: #042f2e;
+        box-shadow: 0 0 12px rgba(0, 255, 204, 0.6);
+    }
+    100% {
+        transform: scale(1);
+        background: transparent;
+        color: inherit;
+        box-shadow: 0 0 8px rgba(0, 255, 204, 0.35);
+    }
+}
+
+.ip-list li.highlight-unlock {
+    animation: unlockPunch 0.6s ease-out;
+    border-radius: 4px;
+    padding: 2px 6px;
+    transform-origin: left center;
+}
 
 .reauth-wrapper { width: 35%; }
 .reauth-container {
@@ -152,6 +188,19 @@ body {
     border-color: var(--neon-green);
     background: rgba(0, 255, 204, 0.1);
     box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+}
+
+.btn-lock-unlock {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 22px;
+    line-height: 1;
+}
+.btn-lock-unlock:hover {
+    color: #00ffcc;
 }
 
 /* --- ПРАВАЯ ПАНЕЛЬ (ТЕЛЕФОН) --- */
@@ -198,6 +247,108 @@ body {
     top: 6px;
 }
 .phone-icons { display: flex; gap: 5px; }
+
+.ha-screen--hidden {
+    display: none !important;
+}
+
+.ha-login-screen.ha-login--hidden {
+    display: none !important;
+}
+
+.ha-login-screen {
+    flex-grow: 1;
+    background-color: var(--ha-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.ha-login-inner {
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+}
+
+.ha-login-logo {
+    font-size: 72px;
+    color: var(--ha-blue);
+    line-height: 1;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 12px rgba(3, 169, 244, 0.35));
+}
+
+.ha-login-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #e2e8f0;
+    margin: 0 0 24px;
+}
+
+.ha-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+}
+
+.ha-login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.ha-login-field input {
+    background: var(--ha-card);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #f1f5f9;
+    font-size: 14px;
+    outline: none;
+}
+
+.ha-login-field input:focus {
+    border-color: var(--ha-blue);
+    box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.25);
+}
+
+.ha-login-password-mask {
+    -webkit-text-security: disc;
+    text-security: disc;
+}
+
+.ha-login-error {
+    font-size: 13px;
+    color: #ff5252;
+    margin: 0;
+    text-align: center;
+}
+
+.ha-login-btn {
+    margin-top: 4px;
+    background: var(--ha-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ha-login-btn:hover {
+    background: #0288d1;
+}
+
+.ha-login-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 
 /* Экран Home Assistant */
 .ha-screen {
@@ -275,6 +426,25 @@ body {
     justify-content: space-around;
     padding: 5px 0;
 }
+
+.ha-sensor-grid.ha-climate-alert {
+    outline: 2px solid #ff5252;
+    border-radius: 8px;
+    padding: 8px 4px;
+}
+
+.ha-climate-alert-msg {
+    font-size: 12px;
+    color: #ff5252;
+    text-align: center;
+    margin-top: 8px;
+    display: none;
+}
+
+.ha-climate-alert-msg.visible {
+    display: block;
+}
+
 .ha-sensor-item {
     display: flex;
     flex-direction: column;
@@ -300,3 +470,31 @@ input:checked + .slider:before { transform: translateX(20px); }
 .slider.round:before { border-radius: 50%; }
 
 .btn-action { font-size: 20px; cursor: pointer; }
+
+.network-graph-wrapper {
+    position: relative; 
+}
+
+.floating-panel {
+    position: absolute;
+    width: 200px;
+    background: rgba(19, 26, 48, 0.85); 
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border-admin);
+    border-radius: 6px;
+    padding: 10px;
+    z-index: 10;
+}
+
+.panel-real { top: 40px; left: 10px; border-top: 2px solid var(--neon-green); }
+.panel-shadow { bottom: 10px; left: 10px; border-bottom: 2px solid var(--neon-red); }
+
+.panel-header { font-size: 11px; text-transform: uppercase; margin-bottom: 8px; font-weight: bold; }
+.text-green { color: var(--neon-green); }
+.text-red { color: var(--neon-red); }
+
+.ip-list { list-style: none; font-family: 'Courier New', monospace; font-size: 12px; }
+.ip-list li { margin-bottom: 4px; display: flex; justify-content: space-between; }
+.badge { font-size: 10px; padding: 2px 4px; border-radius: 4px; background: #334155; }
+.badge-user { background: rgba(0, 255, 204, 0.2); color: var(--neon-green); }
+.badge-banned { background: rgba(255, 51, 102, 0.2); color: var(--neon-red); }
