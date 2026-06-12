@@ -68,6 +68,7 @@
         </main>
 
         <aside class="phone-panel">
+            <div class="phone-wrapper">
             <div class="phone-frame">
                 <div class="phone-header">
                     <span class="phone-time">12:00</span>
@@ -105,6 +106,32 @@
                     </header>
                     
                     <div class="ha-content" id="ha-dynamic-content"></div>
+                </div>
+            </div>
+            </div>
+
+            <div class="hacker-panel">
+                <div class="panel-title hacker-panel-title">
+                    <i class="mdi mdi-skull-crossbones"></i> Red Team View
+                </div>
+                <div class="hacker-controls">
+                    <button type="button" class="hacker-btn" id="btn-recon" data-action="recon">[1] Recon: API Fuzzing (ffuf)</button>
+                    <button type="button" class="hacker-btn" id="btn-exploit" data-action="exploit">[2] Exploit: Auth Bypass (CVE-2024-HA)</button>
+                </div>
+                <div class="hacker-controls hacker-controls-iot">
+                    <button type="button" class="hacker-btn hacker-btn-iot" id="btn-iot-light" data-iot="light">IoT: Toggle Living</button>
+                    <button type="button" class="hacker-btn hacker-btn-iot" id="btn-iot-unlock" data-iot="unlock">IoT: Unlock Door</button>
+                    <button type="button" class="hacker-btn hacker-btn-iot" id="btn-iot-lock" data-iot="lock">IoT: Lock Door</button>
+                    <button type="button" class="hacker-btn hacker-btn-iot" id="btn-iot-fingerprint" data-iot="fingerprint">IoT: Fingerprint</button>
+                </div>
+                <div class="kali-terminal" id="kali-term">
+                    <div class="kali-scroll" id="kali-scroll">
+                        <div id="kali-output"></div>
+                    </div>
+                    <div class="kali-input-line">
+                        <span class="kali-prompt">root@kali:~#</span>
+                        <span id="kali-typed"></span><span id="kali-cursor" class="blink">_</span>
+                    </div>
                 </div>
             </div>
         </aside>

@@ -2,6 +2,7 @@
 _HONEYPOT_PATTERNS = (
     "/wp-admin",
     "/api/admin",
+    "/api/debug",
     "/phpmyadmin",
     "/.env",
 )

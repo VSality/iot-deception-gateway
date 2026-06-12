@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from decision_logic.gateway import is_attacker, record_real_session
 from shadow_world.jitter import apply_states_jitter

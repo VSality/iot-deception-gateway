@@ -209,13 +209,26 @@ body {
     height: 100%;
     background-color: #0f172a;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    align-items: stretch;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.phone-wrapper {
+    flex: 0 0 60%;
+    min-height: 0;
+    display: flex;
     justify-content: center;
+    align-items: flex-start;
 }
 
 .phone-frame {
     width: 340px;
-    height: 680px;
+    height: 100%;
+    max-height: 100%;
     background: #000;
     border: 12px solid #334155;
     border-radius: 40px;
@@ -498,3 +511,137 @@ input:checked + .slider:before { transform: translateX(20px); }
 .badge { font-size: 10px; padding: 2px 4px; border-radius: 4px; background: #334155; }
 .badge-user { background: rgba(0, 255, 204, 0.2); color: var(--neon-green); }
 .badge-banned { background: rgba(255, 51, 102, 0.2); color: var(--neon-red); }
+
+/* --- Red Team View --- */
+.hacker-panel {
+    flex: 1 1 40%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--bg-admin-card);
+    border: 1px solid var(--border-admin);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.hacker-panel-title {
+    margin-bottom: 0;
+    color: #f87171;
+}
+
+.hacker-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hacker-controls-iot {
+    margin-top: 0;
+}
+
+.hacker-btn-iot {
+    font-size: 10px;
+    min-width: 100px;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+.kali-output-line--success {
+    color: #4af626;
+    font-weight: 600;
+}
+
+.kali-output-line--dim {
+    color: #6b9b5c;
+}
+
+.kali-output-line--warn {
+    color: #fbbf24;
+}
+
+.kali-output-line--hit {
+    color: #f87171;
+}
+
+.hacker-btn {
+    flex: 1 1 auto;
+    min-width: 120px;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #fecaca;
+    background: #1a0a0a;
+    border: 1px solid #b91c1c;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.hacker-btn:hover:not(:disabled) {
+    background: #450a0a;
+    border-color: #ef4444;
+}
+
+.hacker-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.kali-terminal {
+    flex: 1;
+    min-height: 0;
+    background: #0a0a0a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    color: #4af626;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.kali-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#kali-output {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.kali-output-line {
+    margin-bottom: 2px;
+}
+
+.kali-input-line {
+    flex-shrink: 0;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid #1e293b;
+    background: #0a0a0a;
+}
+
+.kali-input-line--hidden {
+    display: none;
+}
+
+.kali-prompt {
+    color: #4af626;
+}
+
+@keyframes kali-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+.blink {
+    animation: kali-blink 1s step-end infinite;
+}

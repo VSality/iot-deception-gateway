@@ -531,6 +531,322 @@ function gatewayFetch(url, options = {}) {
     return fetch(url, { ...options, headers });
 }
 
+const RED_TEAM_CLIENT_STORAGE_KEY = "red_team_client_id";
+let kaliBusy = false;
+
+const RED_TEAM_COMMANDS = {
+    recon: "ffuf -w common_api.txt -u http://192.168.1.10/FUZZ",
+    exploit:
+        "python3 exploit_rce.py --target http://192.168.1.10/api/system/plugin_update",
+};
+
+const FFUF_RECON_DELAY_MS = 220;
+
+const FFUF_FAKE_LINES = [
+    { text: "[404] /api/v1/users", className: "kali-output-line--dim" },
+    { text: "[404] /api/hassio/app", className: "kali-output-line--dim" },
+    { text: "[403] /api/config", className: "kali-output-line--dim" },
+    { text: "[404] /api/services", className: "kali-output-line--dim" },
+    { text: "[404] /api/events", className: "kali-output-line--dim" },
+    { text: "[404] /api/logbook", className: "kali-output-line--dim" },
+    { text: "[404] /api/history/period", className: "kali-output-line--dim" },
+    { text: "[403] /api/assist", className: "kali-output-line--dim" },
+    { text: "[404] /api/stream", className: "kali-output-line--dim" },
+    { text: "[404] /api/template", className: "kali-output-line--dim" },
+    { text: "[403] /server-status", className: "kali-output-line--dim" },
+    { text: "[404] /api/config/core", className: "kali-output-line--dim" },
+    { text: "[403] /api/tags", className: "kali-output-line--dim" },
+    { text: "[500] /device.xml", className: "kali-output-line--dim" },
+    {
+        text: "[404] /api/debug",
+        className: "kali-output-line--dim",
+        honeypot: "/api/debug",
+    },
+    { text: "[404] /.well-known/security.txt", className: "kali-output-line--dim" },
+    { text: "[404] /auth/token", className: "kali-output-line--dim" },
+    {
+        text: "[404] /wp-admin",
+        className: "kali-output-line--dim",
+        honeypot: "/wp-admin",
+    },
+    { text: "[404] /api/websocket", className: "kali-output-line--dim" },
+    { text: "[401] /api/auth/login", className: "kali-output-line--dim" },
+    {
+        text: "[200] /api/system/plugin_update",
+        className: "kali-output-line--success",
+    },
+];
+
+const PLUGIN_UPDATE_TOKEN = "admin_bypass_token_991";
+
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getOrCreateRedTeamClientId() {
+    let id = localStorage.getItem(RED_TEAM_CLIENT_STORAGE_KEY);
+    if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(RED_TEAM_CLIENT_STORAGE_KEY, id);
+    }
+    return id;
+}
+
+function redTeamHeaders(extraHeaders = {}) {
+    return {
+        "X-Gateway-Client-Id": getOrCreateRedTeamClientId(),
+        ...extraHeaders,
+    };
+}
+
+function redTeamFetch(url, options = {}) {
+    const headers = redTeamHeaders(options.headers || {});
+    return fetch(url, { ...options, headers });
+}
+
+function appendKaliLine(text, className = "") {
+    const out = document.getElementById("kali-output");
+    if (!out) return;
+    const line = document.createElement("div");
+    line.className = className
+        ? `kali-output-line ${className}`
+        : "kali-output-line";
+    line.textContent = text;
+    out.appendChild(line);
+    scrollKaliToBottom();
+}
+
+function scrollKaliToBottom() {
+    const scroll = document.getElementById("kali-scroll");
+    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+}
+
+function setKaliPromptVisible(visible) {
+    const line = document.querySelector(".kali-input-line");
+    if (line) line.classList.toggle("kali-input-line--hidden", !visible);
+}
+
+async function typeKaliCommand(text) {
+    const typed = document.getElementById("kali-typed");
+    if (!typed) return;
+    typed.textContent = "";
+    for (const ch of text) {
+        typed.textContent += ch;
+        scrollKaliToBottom();
+        await sleep(18 + Math.floor(Math.random() * 8));
+    }
+}
+
+function commitKaliInputLine() {
+    const typed = document.getElementById("kali-typed");
+    const cmd = typed ? typed.textContent : "";
+    appendKaliLine(`root@kali:~# ${cmd}`);
+    if (typed) typed.textContent = "";
+}
+
+function setHackerScenarioButtonsDisabled(disabled) {
+    document
+        .querySelectorAll(".hacker-btn[data-action]")
+        .forEach((btn) => {
+            btn.disabled = disabled;
+        });
+}
+
+async function runFfufReconLines() {
+    for (const entry of FFUF_FAKE_LINES) {
+        await sleep(FFUF_RECON_DELAY_MS);
+        appendKaliLine(entry.text, entry.className);
+        if (entry.honeypot) {
+            await redTeamFetch(entry.honeypot);
+        }
+    }
+}
+
+async function runExploitPayload() {
+    appendKaliLine("[*] Sending payload...", "kali-output-line--warn");
+    await sleep(400);
+    appendKaliLine("[*] Exploiting vulnerability...", "kali-output-line--warn");
+    const res = await redTeamFetch("/api/system/plugin_update", {
+        method: "POST",
+    });
+    let token = PLUGIN_UPDATE_TOKEN;
+    if (res.ok) {
+        try {
+            const body = await res.json();
+            if (body.token) token = body.token;
+        } catch (_) {
+            /* use default token label */
+        }
+    }
+    appendKaliLine(
+        `[*] Success! Acquired token: ${token}`,
+        "kali-output-line--success"
+    );
+    appendKaliLine(`[*] HTTP Status: ${res.status}`, "kali-output-line--dim");
+}
+
+async function simulateHackerAction(actionType) {
+    if (kaliBusy) return;
+    const commandText = RED_TEAM_COMMANDS[actionType];
+    if (!commandText) return;
+
+    kaliBusy = true;
+    setHackerScenarioButtonsDisabled(true);
+    setKaliPromptVisible(true);
+    try {
+        await typeKaliCommand(commandText);
+        commitKaliInputLine();
+        setKaliPromptVisible(false);
+
+        if (actionType === "recon") {
+            appendKaliLine(
+                ":: Progress: [################] 100%",
+                "kali-output-line--dim"
+            );
+            await runFfufReconLines();
+        } else if (actionType === "exploit") {
+            await runExploitPayload();
+        }
+    } catch (err) {
+        appendKaliLine(`[!] Error: ${err.message}`, "kali-output-line--hit");
+    } finally {
+        kaliBusy = false;
+        setHackerScenarioButtonsDisabled(false);
+        setKaliPromptVisible(true);
+        scrollKaliToBottom();
+    }
+}
+
+const HUE_FINGERPRINT_META = {
+    living: {
+        model_id: "LCT015",
+        product: "Hue color ambiance E26/E27",
+        zigbee_addr: "0x00178801083d5c2a",
+    },
+    kitchen: {
+        model_id: "LWB014",
+        product: "Hue white ambiance BR30",
+        zigbee_addr: "0x0017880106a0e3de",
+    },
+};
+
+function appendLightFingerprintBody(device) {
+    const meta = HUE_FINGERPRINT_META[device.room] || {
+        model_id: "LCT010",
+        product: "Hue white and color ambiance",
+        zigbee_addr: "0x0017880100000000",
+    };
+    const manufacturer =
+        device.vendor === "Signify" || device.vendor === "Philips Hue"
+            ? "Signify Netherlands B.V."
+            : device.vendor;
+    const lines = [
+        `    entity_id: light.${device.room}`,
+        `    state: ${device.status}  brightness: ${device.brightness}`,
+        `    manufacturer: ${manufacturer}`,
+        `    model_id: ${meta.model_id}`,
+        `    product_name: ${meta.product}`,
+        `    sw_version: ${device.firmware}`,
+        `    protocol: zigbee`,
+        `    ieee_address: ${meta.zigbee_addr}`,
+        `    reachable: true`,
+    ];
+    for (const line of lines) {
+        appendKaliLine(line, "kali-output-line--dim");
+    }
+}
+
+async function redTeamProbeLightFingerprint(path, label) {
+    appendKaliLine(
+        `[*] curl -s ${window.location.origin}${path}`,
+        "kali-output-line--dim"
+    );
+    const res = await redTeamFetch(path);
+    appendKaliLine(`[*] HTTP ${res.status} — ${label}`, "kali-output-line--dim");
+    if (!res.ok) {
+        appendKaliLine("    (no body / access denied)", "kali-output-line--hit");
+        return;
+    }
+    const device = await res.json();
+    appendLightFingerprintBody(device);
+}
+
+async function redTeamDeviceFingerprint() {
+    appendKaliLine(
+        "[*] iot_fingerprint.py --vendor-probe hue,zigbee",
+        "kali-output-line--warn"
+    );
+    appendKaliLine(
+        "[*] Enumerating REST device descriptors (Home Assistant proxy)...",
+        "kali-output-line--dim"
+    );
+    await redTeamProbeLightFingerprint("/api/lights/living", "Philips Hue — Living");
+    await sleep(350);
+    await redTeamProbeLightFingerprint("/api/lights/kitchen", "Philips Hue — Kitchen");
+    appendKaliLine("[*] Fingerprint complete.", "kali-output-line--success");
+}
+
+async function redTeamIotCommand(iotAction) {
+    if (kaliBusy) return;
+    try {
+        if (iotAction === "light") {
+            appendKaliLine(
+                "[*] iot_chaos.py --cmd toggle_light living",
+                "kali-output-line--warn"
+            );
+            const res = await redTeamFetch("/api/lights/living/toggle", {
+                method: "POST",
+            });
+            appendKaliLine(
+                `[*] Injecting command: toggle_light... HTTP ${res.status}`,
+                res.ok ? "kali-output-line--success" : "kali-output-line--hit"
+            );
+        } else if (iotAction === "unlock") {
+            appendKaliLine(
+                "[*] iot_chaos.py --cmd unlock_door main_door",
+                "kali-output-line--warn"
+            );
+            const res = await redTeamFetch("/api/locks/main_door/unlock", {
+                method: "POST",
+            });
+            appendKaliLine(
+                `[*] Injecting command: unlock_door... HTTP ${res.status}`,
+                res.ok ? "kali-output-line--success" : "kali-output-line--hit"
+            );
+        } else if (iotAction === "lock") {
+            appendKaliLine(
+                "[*] iot_chaos.py --cmd lock_door main_door",
+                "kali-output-line--warn"
+            );
+            const res = await redTeamFetch("/api/locks/main_door/lock", {
+                method: "POST",
+            });
+            appendKaliLine(
+                `[*] Injecting command: lock_door... HTTP ${res.status}`,
+                res.ok ? "kali-output-line--success" : "kali-output-line--hit"
+            );
+        } else if (iotAction === "fingerprint") {
+            await redTeamDeviceFingerprint();
+        }
+    } catch (err) {
+        appendKaliLine(`[!] IoT inject failed: ${err.message}`, "kali-output-line--hit");
+    }
+    scrollKaliToBottom();
+}
+
+function setupRedTeamPanel() {
+    document.querySelectorAll(".hacker-btn[data-action]").forEach((btn) => {
+        btn.addEventListener("click", function () {
+            simulateHackerAction(btn.dataset.action);
+        });
+    });
+    document.querySelectorAll(".hacker-btn[data-iot]").forEach((btn) => {
+        btn.addEventListener("click", function () {
+            redTeamIotCommand(btn.dataset.iot);
+        });
+    });
+}
+
 const BASE_NODE_BG = "#131a30";
 const BORDER_REAL = "#3b82f6";
 const BORDER_SHADOW = "#a855f7";
@@ -1077,4 +1393,5 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     initTopology();
     setupHaLogin(appendTerminalLog);
+    setupRedTeamPanel();
 });

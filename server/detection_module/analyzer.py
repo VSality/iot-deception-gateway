@@ -55,6 +55,13 @@ async def process_failed_ha_login(request: Request) -> None:
         )
 
 
+def _honeypot_alert_message(path: str) -> str:
+    path_lower = path.lower()
+    if "/api/debug" in path_lower or "/.env" in path_lower:
+        return "Fuzzing detected. IP silently isolated."
+    return f"Honeypot path probe: {path}"
+
+
 async def monitor_traffic(request: Request) -> None:
     """Run all detectors; on threat, alert dashboard and ban client fingerprint."""
     client_ip = get_client_ip(request)
@@ -64,7 +71,7 @@ async def monitor_traffic(request: Request) -> None:
         (
             "honeypot",
             check_honeypot_path(path),
-            f"Honeypot path probe: {path}",
+            _honeypot_alert_message(path),
         ),
         (
             "ratelimit",
