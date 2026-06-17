@@ -1,0 +1,11 @@
+.git
+**/__pycache__
+**/*.pyc
+.venv
+venv
+ha_config
+**/*.sqlite3
+.cursor
+agent-transcripts
+**/.pytest_cache
+README.md

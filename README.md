@@ -128,3 +128,64 @@ curl -i http://127.0.0.1:8000/api/lights/unknown
 ```
 
 OpenAPI UI is disabled by default. For local development: `set ENABLE_DOCS=1` (Windows) or `ENABLE_DOCS=1 python main.py`, then open `/docs`.
+
+## Docker (network segmentation)
+
+Target environment: **Kali Linux** on a **VirtualBox** VM (build and run there). The gateway is the only service published by default; **Home Assistant** runs on the internal `deception_net` bridge and is **not** wired into the FastAPI app (in-memory `REAL_DEVICES` unchanged).
+
+### Prerequisites (Kali)
+
+- Docker Engine + Compose plugin (`docker compose`)
+- User in the `docker` group
+- VM resources: ~2 CPU, 4 GB RAM recommended (HA first start can take several minutes)
+
+### Run (segmented — default)
+
+From the repository root:
+
+```bash
+docker compose up -d --build
+```
+
+- **Deception gateway (dashboard + API):** `http://127.0.0.1:8000/`
+- **Home Assistant:** not reachable from the VM host (`curl http://127.0.0.1:8123` should fail). Inside the network: `http://homeassistant:8123`
+
+Verify segmentation:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8123 || true
+docker compose exec gateway curl -s -o /dev/null -w "%{http_code}\n" http://homeassistant:8123
+```
+
+### Expose HA on the VM (report / compare real HA vs gateway)
+
+Use the override file to publish port **8123** on the host:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.ha-host.yml up -d
+```
+
+Open `http://127.0.0.1:8123` for HA onboarding; data is stored in `./ha_config` (gitignored).
+
+To return to segmented mode, recreate without the override (no `8123` mapping):
+
+```bash
+docker compose -f docker-compose.yml up -d
+```
+
+### VirtualBox networking
+
+| Adapter | Use case |
+|---------|----------|
+| NAT | Browser on Kali → `http://127.0.0.1:8000` |
+| Bridged (or NAT port forward) | Open dashboard from Windows host → `http://<Kali-IP>:8000` |
+
+### Files
+
+| File | Role |
+|------|------|
+| `Dockerfile` | FastAPI gateway image (`server/` + `frontend/`) |
+| `docker-compose.yml` | `gateway` + `homeassistant`, network `deception_net` |
+| `docker-compose.ha-host.yml` | Optional `8123:8123` for HA |
+| `ha_config/` | HA persistent config (volume mount) |

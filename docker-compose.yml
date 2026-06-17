@@ -1,0 +1,25 @@
+services:
+  gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    networks:
+      - deception_net
+    depends_on:
+      - homeassistant
+    restart: unless-stopped
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    volumes:
+      - ./ha_config:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      TZ: Europe/Kyiv
+    networks:
+      - deception_net
+    restart: unless-stopped
+
+networks:
+  deception_net:
+    driver: bridge

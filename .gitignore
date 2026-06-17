@@ -45,3 +45,7 @@ desktop.ini
 # Keys (if ever added)
 *.pem
 *.key
+
+# Home Assistant runtime config (keep empty dir in repo)
+ha_config/*
+!ha_config/.gitkeep

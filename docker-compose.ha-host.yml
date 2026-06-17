@@ -1,0 +1,6 @@
+# Optional override: expose Home Assistant on the VM host for report testing.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.ha-host.yml up -d
+services:
+  homeassistant:
+    ports:
+      - "8123:8123"
