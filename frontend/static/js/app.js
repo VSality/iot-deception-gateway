@@ -47,11 +47,11 @@ function parseEntityId(entityId) {
 }
 
 function lightStatusLabel(on) {
-    return on ? "Включено" : "Выключено";
+    return on ? "On" : "Off";
 }
 
 function lockStatusLabel(unlocked) {
-    return unlocked ? "Открыто" : "Заблокировано";
+    return unlocked ? "Unlocked" : "Locked";
 }
 
 function lockIsUnlocked(haState) {
@@ -95,8 +95,8 @@ function paintLockRowUi(parts) {
     }
     if (btn) {
         btn.title = unlocked
-            ? "Заблокировать"
-            : "Открыть замок (шаг knock)";
+            ? "Lock"
+            : "Open lock (knock step)";
     }
 }
 
@@ -278,7 +278,7 @@ function appendClimateCard(container) {
     card.className = "ha-card";
     card.id = "ha-climate-card";
     card.appendChild(
-        createHaCardHeader("mdi-thermometer", "ha-icon-green", "Климат")
+        createHaCardHeader("mdi-thermometer", "ha-icon-green", "Climate")
     );
 
     const grid = document.createElement("div");
@@ -305,7 +305,7 @@ function appendClimateCard(container) {
     const alertMsg = document.createElement("div");
     alertMsg.className = "ha-climate-alert-msg";
     alertMsg.id = "ha-climate-alert-msg";
-    alertMsg.textContent = "Тревога: аномалия климата";
+    alertMsg.textContent = "Alarm: climate anomaly";
 
     card.appendChild(grid);
     card.appendChild(alertMsg);
@@ -329,7 +329,7 @@ function renderHomeAssistantUI(entities) {
         const card = document.createElement("div");
         card.className = "ha-card";
         card.appendChild(
-            createHaCardHeader("mdi-lightbulb-group", "ha-icon-blue", "Освещение")
+            createHaCardHeader("mdi-lightbulb-group", "ha-icon-blue", "Lighting")
         );
         for (const entity of lights) {
             card.appendChild(createLightRow(entity));
@@ -341,7 +341,7 @@ function renderHomeAssistantUI(entities) {
         const card = document.createElement("div");
         card.className = "ha-card";
         card.appendChild(
-            createHaCardHeader("mdi-shield-home", "ha-icon-red", "Безопасность")
+            createHaCardHeader("mdi-shield-home", "ha-icon-red", "Security")
         );
         for (const entity of locks) {
             card.appendChild(createLockRow(entity));
@@ -867,9 +867,14 @@ function setupRedTeamPanel() {
 }
 
 const BASE_NODE_BG = "#131a30";
-const BORDER_REAL = "#3b82f6";
-const BORDER_SHADOW = "#a855f7";
+const BORDER_REAL = "#00ffcc";
+const BORDER_SHADOW = "#ff3366";
 const BORDER_CANARY = "#ea580c";
+
+const HUB_REAL_BG = "#334155";
+const HUB_REAL_BORDER = "#00ffcc";
+const HUB_SHADOW_BG = "#334155";
+const HUB_SHADOW_BORDER = "#ff3366";
 
 /** Per-edge physics/style: `length` = spring length for this link only (vis-network). */
 const GATEWAY_HUB_EDGES = {
@@ -957,7 +962,7 @@ function buildGraphFromTopology(topo) {
     nodes.push({
         id: realHub.id,
         label: `${realHub.name}\n${realHub.ip}`,
-        group: "hub",
+        group: "hub_real",
     });
     edges.push({
         from: gw.id,
@@ -979,7 +984,7 @@ function buildGraphFromTopology(topo) {
     nodes.push({
         id: shadowHub.id,
         label: `${shadowHub.name}\n${shadowHub.ip}`,
-        group: "hub",
+        group: "hub_shadow",
     });
     edges.push({
         from: gw.id,
@@ -1016,7 +1021,16 @@ const graphOptions = {
     },
     groups: {
         gw: { shape: "hexagon", color: { background: "#1e293b", border: "#00ffcc" }, size: 25 },
-        hub: { shape: "database", color: { background: "#334155", border: "#94a3b8" }, size: 20 },
+        hub_real: {
+            shape: "database",
+            color: { background: HUB_REAL_BG, border: HUB_REAL_BORDER },
+            size: 20,
+        },
+        hub_shadow: {
+            shape: "database",
+            color: { background: HUB_SHADOW_BG, border: HUB_SHADOW_BORDER },
+            size: 20,
+        },
         detector: { shape: "diamond", color: { background: "#78350f", border: "#fbbf24" }, size: 18 },
         light_real: { shape: "dot", color: { background: BASE_NODE_BG, border: BORDER_REAL } },
         lock_real: { shape: "box", color: { background: BASE_NODE_BG, border: BORDER_REAL } },
@@ -1153,7 +1167,7 @@ function renderIpState({ whitelist = [], blacklist = [], highlightClient = null 
     if (whitelist.length === 0) {
         const empty = document.createElement("li");
         empty.className = "text-muted";
-        empty.textContent = "Пусто";
+        empty.textContent = "Empty";
         realList.appendChild(empty);
     } else {
         for (const entry of whitelist) {
@@ -1179,7 +1193,7 @@ function renderIpState({ whitelist = [], blacklist = [], highlightClient = null 
     if (blacklist.length === 0) {
         const empty = document.createElement("li");
         empty.className = "text-muted";
-        empty.textContent = "Пусто";
+        empty.textContent = "Empty";
         shadowList.appendChild(empty);
     } else {
         for (const entry of blacklist) {
@@ -1265,7 +1279,7 @@ function connectDashboardWebSocket(
     openSocket();
 }
 
-const KNOCK_MSG_IDLE = "Ожидание последовательности...";
+const KNOCK_MSG_IDLE = "Waiting for sequence...";
 let knockUiResetTimer = null;
 
 function setKnockProgress(step) {
@@ -1279,7 +1293,7 @@ function setKnockProgress(step) {
     }
     const msg = document.getElementById("reauth-msg");
     if (msg) {
-        msg.textContent = `Паттерн: шаг ${n}/3...`;
+        msg.textContent = `Pattern: step ${n}/3...`;
         msg.classList.remove("text-muted");
         msg.style.color = "#94a3b8";
     }
@@ -1311,7 +1325,7 @@ function showKnockSuccess() {
     }
     const msg = document.getElementById("reauth-msg");
     if (msg) {
-        msg.textContent = "УСПЕХ!";
+        msg.textContent = "SUCCESS!";
         msg.classList.remove("text-muted");
         msg.style.color = "#00ffcc";
     }

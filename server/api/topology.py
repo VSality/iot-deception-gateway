@@ -13,16 +13,15 @@ DETECTORS = [
     {"id": "honeypot", "name": "Honeypot"},
     {"id": "ratelimit", "name": "Rate Limit"},
     {"id": "bruteforce", "name": "Brute Force"},
-    {"id": "portscan", "name": "Port Scan"},
 ]
 
-REAL_HUB = {"id": "real_hub", "name": "Home Assistant\n(Real)", "ip": "192.168.1.10"}
-SHADOW_HUB = {"id": "shadow_hub", "name": "Home Assistant\n(Shadow)", "ip": "10.66.6.1"}
+REAL_HUB = {"id": "real_hub", "name": "\n\nHome Assistant\n(Real)", "ip": ""}
+SHADOW_HUB = {"id": "shadow_hub", "name": "\n\nHome Assistant\n(Shadow)", "ip": ""}
 
 REAL_DEVICES_TOPOLOGY: list[dict] = [
     {
         "id": "dev_hue_living",
-        "name": "Philips Hue — Гостиная",
+        "name": "Philips Hue — living room",
         "ip": "192.168.1.21",
         "mac": "00:17:88:6F:1A:3C",
         "firmware": "1.122.2",
@@ -30,7 +29,7 @@ REAL_DEVICES_TOPOLOGY: list[dict] = [
     },
     {
         "id": "dev_hue_kitchen",
-        "name": "Philips Hue — Кухня",
+        "name": "Philips Hue — kitchen",
         "ip": "192.168.1.22",
         "mac": "00:17:88:7B:42:E0",
         "firmware": "1.122.2",

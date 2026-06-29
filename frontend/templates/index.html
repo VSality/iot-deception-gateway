@@ -19,25 +19,25 @@
                     <h1>DECEPTION GATEWAY <span>v1.0</span></h1>
                 </div>
                 <div class="global-stats">
-                    <div class="stat-box">Статус: <span class="status-secure" id="system-status">SECURE</span></div>
-                    <div class="stat-box">В бане: <span class="status-bad" id="ban-count">0 IP</span></div>
+                    <div class="stat-box">Status: <span class="status-secure" id="system-status">SECURE</span></div>
+                    <div class="stat-box">Banned: <span class="status-bad" id="ban-count">0 IP</span></div>
                 </div>
             </header>
 
             <div class="network-graph-wrapper">
-                <div class="panel-title"><i class="mdi mdi-hub"></i> Топология сети и распределение трафика</div>
+                <div class="panel-title"><i class="mdi mdi-hub"></i> Network topology and traffic distribution</div>
 
                 <div class="floating-panel panel-real">
-                    <div class="panel-header text-green"><i class="mdi mdi-shield-check"></i> Легитимные сессии (Real)</div>
+                    <div class="panel-header text-green"><i class="mdi mdi-shield-check"></i> Legitimate sessions (Real)</div>
                     <ul id="real-ip-list" class="ip-list">
-                        <li class="text-muted">Пусто</li>
+                        <li class="text-muted">Empty</li>
                     </ul>
                 </div>
 
                 <div class="floating-panel panel-shadow">
-                    <div class="panel-header text-red"><i class="mdi mdi-skull-outline"></i> Изолированные (Shadow)</div>
+                    <div class="panel-header text-red"><i class="mdi mdi-skull-outline"></i> Isolated (Shadow)</div>
                     <ul id="shadow-ip-list" class="ip-list">
-                        <li class="text-muted">Пусто</li>
+                        <li class="text-muted">Empty</li>
                     </ul>
                 </div>
                 
@@ -55,13 +55,13 @@
                 <div class="reauth-wrapper">
                     <div class="panel-title"><i class="mdi mdi-key-wireless"></i> Implicit Re-auth Tracker</div>
                     <div class="reauth-container">
-                        <p>Паттерн (15 с): Свет ON → Замок → Свет OFF (living)</p>
+                        <p>Pattern (15 s): Light ON → Lock → Light OFF</p>
                         <div class="knock-slots">
                             <div class="slot" id="slot-1" title="1: Бра ON"></div>
                             <div class="slot" id="slot-2" title="2: Замок"></div>
                             <div class="slot" id="slot-3" title="3: Бра OFF"></div>
                         </div>
-                        <div class="reauth-status text-muted" id="reauth-msg">Ожидание последовательности...</div>
+                        <div class="reauth-status text-muted" id="reauth-msg">Waiting for sequence...</div>
                     </div>
                 </div>
             </div>
@@ -85,14 +85,14 @@
                         <h3 class="ha-login-title">Home Assistant</h3>
                         <div class="login-form-container ha-login-form" id="ha-login-form">
                             <label class="ha-login-field">
-                                <span>Имя пользователя</span>
+                                <span>User name</span>
                                 <input type="text" id="ha-login-username" autocomplete="off" value="admin">
                             </label>
                             <label class="ha-login-field">
-                                <span>Пароль</span>
+                                <span>Password</span>
                                 <input type="text" id="ha-login-password" class="ha-login-password-mask" autocomplete="off">
                             </label>
-                            <p class="ha-login-error" id="ha-login-error" hidden>Неверный логин или пароль</p>
+                            <p class="ha-login-error" id="ha-login-error" hidden>Invalid username or password</p>
                             <button type="button" class="ha-login-btn" id="ha-login-submit">Login</button>
                         </div>
                     </div>
@@ -101,7 +101,7 @@
                 <div class="ha-screen ha-screen--hidden" id="ha-screen">
                     <header class="ha-navbar">
                         <i class="mdi mdi-menu"></i>
-                        <h2>Наш Дом</h2>
+                        <h2>Our Home</h2>
                         <i class="mdi mdi-dots-vertical"></i>
                     </header>
                     

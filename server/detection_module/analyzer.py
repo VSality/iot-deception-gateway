@@ -5,11 +5,10 @@ from decision_logic.device_catalog import CLIMATE_DEVICE_ID, set_climate_alert_a
 from decision_logic.gateway import ban_client, ban_client_key
 from detection_module.detectors.brute_force import check_brute_force, record_failed_login
 from detection_module.detectors.honeypot import check_honeypot_path
-from detection_module.detectors.port_scan import check_port_scan
 from detection_module.detectors.rate_limit import check_rate_limit
 from utils.ws_notify import broadcast_attack_alert, schedule_device_state
 
-DETECTOR_IDS = frozenset({"honeypot", "ratelimit", "bruteforce", "portscan"})
+DETECTOR_IDS = frozenset({"honeypot", "ratelimit", "bruteforce"})
 
 
 async def emit_detection_hit(
@@ -82,11 +81,6 @@ async def monitor_traffic(request: Request) -> None:
             "bruteforce",
             check_brute_force(client_ip, path),
             "Brute-force login attempts",
-        ),
-        (
-            "portscan",
-            check_port_scan(client_ip),
-            "Port scan activity detected",
         ),
     ]
 

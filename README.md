@@ -1,145 +1,50 @@
 # IoT Deception Gateway
 
-Backend for an IoT cybersecurity gateway: one HTTP API, two data planes — **real devices** (`REAL_DEVICES`) and a **Shadow Digital Twin** for blacklisted attackers. Legitimate users (official smart-home app) can **exit the sandbox** via **In-Band IoT Port Knocking**.
+FastAPI gateway for a smart-home lab: one HTTP API routes clients to either **real IoT state** (`REAL_DEVICES`) or a **shadow digital twin** after threat detection. A web **dashboard** shows topology, traffic logs, and a Home Assistant–style phone mock. Sandboxed clients can **re-authenticate** via **in-band IoT port knocking** (light → lock → light) without leaving the mobile app flow.
 
-## Project layout
+## Features
 
+- **Dual data plane** — legitimate sessions see real device firmware and state; banned clients see mirrored shadow devices with jitter and legacy builds
+- **Traffic analysis** — honeypot paths, per-IP rate limiting, brute-force login tracking (`honeypot`, `ratelimit`, `bruteforce`)
+- **Client fingerprint** — ban/whitelist uses `IP + X-Gateway-Client-Id` (NAT-safe; dashboard and curl can coexist on one IP)
+- **Shadow canary** — extra light entity only visible in the shadow `/api/states` payload
+- **Static decoys** — sandbox-only exploit-shaped URLs return plausible errors ([`server/shadow_world/decoys.py`](server/shadow_world/decoys.py))
+- **Masked errors** — probes and API failures avoid leaking FastAPI stack traces in responses
+- **Live dashboard** — vis-network topology, WebSocket log stream, Red Team panel, port-knock progress UI
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Client --> Gateway
+  Gateway -->|whitelist| RealPlane[Real devices]
+  Gateway -->|banned| ShadowPlane[Shadow twin]
+  Gateway --> Detectors[honeypot ratelimit bruteforce]
+  Dashboard -->|WebSocket| Gateway
 ```
-frontend/
-  templates/index.html    # Deception dashboard (served via FileResponse at GET /)
-  static/css/style.css
-  static/js/app.js
-server/
-  main.py                 # FastAPI app, static mount, dashboard, api router, honeypot catch-all
-  decision_logic/         # client ban/whitelist (IP + X-Gateway-Client-Id), port_knock_config
-  detection_module/       # Traffic analyzer + detectors
-  shadow_world/           # REAL_DEVICES + ShadowWorld (canary light in shadow only)
-  api/                    # lights, locks, GET /api/states (Home Assistant-style)
-  error_masking.py        # Masked HTTP/validation errors (IoT JSON vs nginx HTML)
-  schemas/                # JSON builders + ha_states
-  requirements.txt
-```
 
-## Setup
+The browser dashboard generates a persistent client id (`localStorage`) and sends it on REST and on `/ws/dashboard?client_id=`. Server-side session routing keys combine client IP with that header ([`server/decision_logic/client_identity.py`](server/decision_logic/client_identity.py)).
 
-From the project root or `server/`:
+Home Assistant in Docker is an optional **segmented** service on `deception_net`; the gateway API uses in-memory `REAL_DEVICES`, not HA REST, for the deception demo.
+
+## Requirements
+
+- **Python 3.11+** and `pip` for local runs
+- **Docker Engine** with Compose plugin (`docker compose`) for the lab stack (optional)
+
+## Quick start
+
+### Local development
 
 ```bash
 pip install -r server/requirements.txt
-```
-
-## Run
-
-```bash
 cd server
 python main.py
 ```
 
-Server listens on `http://0.0.0.0:8000`.
+Open the dashboard at `http://127.0.0.1:8000/` (static files under `/static/`). The phone mock calls the same API (`/api/states`, lights, locks) as external clients.
 
-**Dashboard (browser):** open `http://127.0.0.1:8000/` — static assets at `/static/...` (no Jinja2). The lamp toggle on the phone mock is local UI for now; API integration uses room id `living` (see `PORT_KNOCK_ROOM_ID`).
-
-## Manual verification
-
-1. Install deps and start the server (see above).
-2. **Dashboard:** `http://127.0.0.1:8000/` loads HTML; DevTools Network shows `200` for `/static/css/style.css` and `/static/js/app.js`.
-3. **Legal user:** `GET http://127.0.0.1:8000/api/lights/living` → `source: REAL_API`, `firmware: v2.1`.
-   - `GET http://127.0.0.1:8000/api/states` → JSON array of **3** entities (`light.living`, `light.kitchen`, `lock.main_door`), HA shape: `entity_id`, `state`, `attributes`. No `light.hall_dimmer_aux`.
-4. **Detection:** `curl http://127.0.0.1:8000/.env` → that **client** (no `X-Gateway-Client-Id`) is banned; the dashboard browser (UUID in `localStorage`) on the same IP stays separate.
-5. **Shadow twin:** `GET /api/lights/living` as banned client → `SHADOW_TWIN`, legacy-style firmware (e.g. `1.49.195007`), jitter.
-   - `GET /api/states` → **4** entities (includes `light.hall_dimmer_aux` canary), ~0.15–0.35 s delay. Console: `[API] Client requested global states. Defending: True.`
-6. **Canary (optional passive check):** `hall_dimmer_aux` exists only in shadow — `GET /api/lights/hall_dimmer_aux` → 404 when clean, 200 when sandboxed.
-7. **Port knocking (FSM exit, 15 s window):** while sandboxed, run sequence **living ON → `main_door` unlock → living OFF** with the same fingerprint (`X-Gateway-Client-Id`). Dashboard phone mock: toggle **Гостиная Бра**, tap lock icon, toggle bra off.
-
-```bash
-CID=11111111-1111-1111-1111-111111111111
-H="X-Gateway-Client-Id: $CID"
-# If living was ON, toggle once to OFF before starting.
-curl -H "$H" -X POST http://127.0.0.1:8000/api/lights/living/toggle   # ON
-curl -H "$H" -X POST http://127.0.0.1:8000/api/locks/main_door/unlock
-curl -H "$H" -X POST http://127.0.0.1:8000/api/lights/living/toggle   # OFF
-```
-
-Server log: `[PORT KNOCKING] Sequence complete...` — WebSocket `reauth_success` + gateway pulse on dashboard.
-
-8. **Next request:** `GET /api/lights/living` → `REAL_API`.
-9. **Wrong pattern:** 3× toggle without lock does **not** whitelist. Wrong order resets the FSM.
-
-State is in-memory (resets on restart).
-
-## Dashboard WebSocket (`/ws/dashboard`)
-
-Requires `uvicorn[standard]` (WebSocket support). Message types:
-
-| `type` | Purpose |
-|--------|---------|
-| `log` | `{ level, message, timestamp }` |
-| `ip_state` | `{ whitelist, blacklist }` — Real / Shadow client labels (`IP · client id`) |
-| `device_state` | `{ device_id, state, device_type? }` — graph + phone mock |
-| `attack_alert` | `{ detector, message, client_ip, timestamp }` — terminal ALERT + detector node pulse |
-| `knock_progress` | `{ step: 1 \| 2 }` — port-knock step done; lights slots 1..step on dashboard |
-| `knock_reset` | — sequence timeout or wrong order; clear knock slots |
-| `reauth_success` | `{ client, timestamp }` — port-knock exit; gateway pulse + highlight Real list |
-
-Detector node IDs on the graph match `detector`: `honeypot`, `ratelimit`, `bruteforce`, `portscan`.
-
-**Detector UI demo (optional):** set `ENABLE_DETECTOR_SIM=1`, open the dashboard (WebSocket connected), then:
-
-```powershell
-Invoke-RestMethod -Method POST "http://127.0.0.1:8000/api/dev/simulate-detection/honeypot"
-Invoke-RestMethod -Method POST "http://127.0.0.1:8000/api/dev/simulate-detection/portscan"
-```
-
-Expect three red pulses on the matching diamond node, a red line in `#terminal-log`, and the client in the Shadow (banned) list.
-
-**Real triggers (no sim):** `GET /.env` → honeypot; 11+ requests in one second from the same IP → ratelimit.
-
-Demo log spam is off by default (`ENABLE_WS_DEMO_LOGS=0`).
-
-## Client identity (`X-Gateway-Client-Id`)
-
-Ban/whitelist/real-session use **`IP + X-Gateway-Client-Id`**, not IP alone (shared NAT / infected LAN device).
-
-- Dashboard: UUID in `localStorage`, sent on every `gatewayFetch` and on WebSocket `?client_id=`.
-- curl without header → `IP · no client id` (separate from the browser).
-
-```bash
-curl -H "X-Gateway-Client-Id: test-lab-client" http://127.0.0.1:8000/api/lights/living
-```
-
-## Shadow decoy paths (sandbox only)
-
-Exploit-shaped URLs return **static** error bodies (no RCE), not a generic nginx 404 — e.g. `/api/tags`, `/clip/v2/resource`, `/device.xml`, `/ota/check`, `/api/legacy/auth`. Implemented in [`server/shadow_world/decoys.py`](server/shadow_world/decoys.py); only when `is_attacker` is true.
-
-| Request (banned client) | Typical response |
-|-------------------------|------------------|
-| `GET /api/tags` | 403 JSON |
-| `GET /device.xml` | 500 XML |
-| Unknown room `/api/lights/xyz` | 404 API JSON (unchanged) |
-| Scanner `GET /.env` | honeypot + ban (may still be masked 404 on non-API path) |
-
-## Anti-fingerprinting (masked errors)
-
-Probe paths and API errors do not expose FastAPI `{"detail": ...}` responses.
-
-```bash
-curl -i http://127.0.0.1:8000/wp-admin
-curl -i http://127.0.0.1:8000/api/lights/unknown
-```
-
-OpenAPI UI is disabled by default. For local development: `set ENABLE_DOCS=1` (Windows) or `ENABLE_DOCS=1 python main.py`, then open `/docs`.
-
-## Docker (network segmentation)
-
-Target environment: **Kali Linux** on a **VirtualBox** VM (build and run there). The gateway is the only service published by default; **Home Assistant** runs on the internal `deception_net` bridge and is **not** wired into the FastAPI app (in-memory `REAL_DEVICES` unchanged).
-
-### Prerequisites (Kali)
-
-- Docker Engine + Compose plugin (`docker compose`)
-- User in the `docker` group
-- VM resources: ~2 CPU, 4 GB RAM recommended (HA first start can take several minutes)
-
-### Run (segmented — default)
+### Docker
 
 From the repository root:
 
@@ -147,10 +52,38 @@ From the repository root:
 docker compose up -d --build
 ```
 
-- **Deception gateway (dashboard + API):** `http://127.0.0.1:8000/`
-- **Home Assistant:** not reachable from the VM host (`curl http://127.0.0.1:8123` should fail). Inside the network: `http://homeassistant:8123`
+- Gateway (dashboard + API): `http://127.0.0.1:8000/`
+- Home Assistant: reachable only inside `deception_net` by default (`http://homeassistant:8123` from the gateway container)
 
-Verify segmentation:
+See [Docker lab](#docker-lab) for segmentation checks, optional HA on port 8123, and VirtualBox access from a host machine.
+
+## Configuration
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `ENABLE_DOCS` | off | Enable OpenAPI UI at `/docs` |
+| `ENABLE_DETECTOR_SIM` | off | Allow `POST /api/dev/simulate-detection/{detector_id}` |
+| `ENABLE_WS_DEMO_LOGS` | `0` | Periodic demo log lines on the dashboard WebSocket |
+
+Example (Linux/macOS): `ENABLE_DOCS=1 python main.py` from `server/`. Windows: `set ENABLE_DOCS=1` before starting.
+
+## Demo at a glance
+
+1. Open the dashboard and confirm topology + live log.
+2. `GET /api/lights/living` as a clean client → `REAL_API`.
+3. Trigger honeypot (e.g. `GET /.env`) for a test client id → shadow responses and canary in `/api/states`.
+4. Complete port knock: living ON → unlock `main_door` → living OFF (same `X-Gateway-Client-Id`) → back to `REAL_API`.
+5. Optional: `ENABLE_DETECTOR_SIM=1` and simulate a detector hit from the dashboard session.
+
+Full step-by-step commands, WebSocket event types, and decoy examples: **[docs/TESTING.md](docs/TESTING.md)**.
+
+## Docker lab
+
+Typical deployment: **Kali Linux** in VirtualBox. Only the **gateway** publishes port **8000** by default; Home Assistant stays on the internal bridge.
+
+**Prerequisites:** Docker Compose, user in `docker` group, ~2 CPU / 4 GB RAM (first HA start may take several minutes).
+
+**Segmentation check:**
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/
@@ -158,34 +91,38 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8123 || true
 docker compose exec gateway curl -s -o /dev/null -w "%{http_code}\n" http://homeassistant:8123
 ```
 
-### Expose HA on the VM (report / compare real HA vs gateway)
+**Expose HA on the VM host** (report / compare with real HA):  
+`docker compose -f docker-compose.yml -f docker-compose.ha-host.yml up -d` → `http://127.0.0.1:8123`, data in `./ha_config` (gitignored).  
+Return to segmented mode: `docker compose -f docker-compose.yml up -d` (no 8123 mapping).
 
-Use the override file to publish port **8123** on the host:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.ha-host.yml up -d
-```
-
-Open `http://127.0.0.1:8123` for HA onboarding; data is stored in `./ha_config` (gitignored).
-
-To return to segmented mode, recreate without the override (no `8123` mapping):
-
-```bash
-docker compose -f docker-compose.yml up -d
-```
-
-### VirtualBox networking
-
-| Adapter | Use case |
-|---------|----------|
-| NAT | Browser on Kali → `http://127.0.0.1:8000` |
-| Bridged (or NAT port forward) | Open dashboard from Windows host → `http://<Kali-IP>:8000` |
-
-### Files
+| VirtualBox adapter | Use case |
+|--------------------|----------|
+| NAT | Browser on the VM → `http://127.0.0.1:8000` |
+| Bridged or NAT port forward | Host machine → `http://<VM-IP>:8000` |
 
 | File | Role |
 |------|------|
-| `Dockerfile` | FastAPI gateway image (`server/` + `frontend/`) |
+| `Dockerfile` | Gateway image (`server/` + `frontend/`) |
 | `docker-compose.yml` | `gateway` + `homeassistant`, network `deception_net` |
 | `docker-compose.ha-host.yml` | Optional `8123:8123` for HA |
-| `ha_config/` | HA persistent config (volume mount) |
+| `ha_config/` | HA persistent config volume |
+
+## Project layout
+
+```
+frontend/          Dashboard HTML, CSS, JS (vis-network graph, HA mock, Red Team UI)
+server/
+  main.py          FastAPI app entrypoint
+  api/             REST: lights, locks, states, topology, auth
+  decision_logic/  Ban/whitelist, port-knock FSM
+  detection_module/ Analyzers and detectors
+  shadow_world/    Real mirror, shadow twin, decoys, jitter
+  ws/              Dashboard WebSocket
+  schemas/         HA-style JSON builders
+docs/
+  TESTING.md       Manual verification checklist
+```
+
+## Documentation
+
+- **[docs/TESTING.md](docs/TESTING.md)** — verification checklist, WebSocket events, detector simulation, decoys

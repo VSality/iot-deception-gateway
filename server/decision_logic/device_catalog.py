@@ -7,40 +7,40 @@ CLIMATE_ALERT_ACTIVE = False
 DEVICE_META: dict[str, dict] = {
     "dev_hue_living": {
         "device_type": "light",
-        "type_label": "Лампа",
+        "type_label": "Light",
         "api_key": ("light", "living"),
         "default_state": "off",
     },
     "dev_hue_kitchen": {
         "device_type": "light",
-        "type_label": "Лампа",
+        "type_label": "Light",
         "api_key": ("light", "kitchen"),
         "default_state": "off",
     },
     "dev_lock": {
         "device_type": "lock",
-        "type_label": "Замок",
+        "type_label": "Lock",
         "api_key": ("lock", "main_door"),
         "default_state": "locked",
     },
     "dev_climate": {
         "device_type": "sensor",
-        "type_label": "Сенсор",
+        "type_label": "Sensor",
         "default_state": "ok",
     },
     "dev_camera": {
         "device_type": "sensor",
-        "type_label": "Камера",
+        "type_label": "Camera",
         "default_state": "ok",
     },
     "dev_relay": {
         "device_type": "light",
-        "type_label": "Реле",
+        "type_label": "Relay",
         "default_state": "off",
     },
     "dev_voice": {
         "device_type": "sensor",
-        "type_label": "Хаб",
+        "type_label": "Hub",
         "default_state": "ok",
     },
 }
