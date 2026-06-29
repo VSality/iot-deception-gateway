@@ -286,8 +286,8 @@ function appendClimateCard(container) {
     grid.id = "ha-climate-grid";
 
     for (const [val, lbl] of [
-        ["22.5 °C", "Температура"],
-        ["48 %", "Влажность"],
+        ["22.5 °C", "Temperature"],
+        ["48 %", "Humidity"],
     ]) {
         const item = document.createElement("div");
         item.className = "ha-sensor-item";
